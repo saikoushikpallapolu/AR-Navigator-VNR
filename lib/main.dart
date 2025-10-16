@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
-import 'screens/onboarding_screen.dart';
-import 'screens/login_form_screen.dart';
-import 'screens/dashboard_screen.dart';
-import 'screens/qr_scanner_page.dart';
-import 'screens/faculty_finder_screen.dart';
+import 'package:provider/provider.dart';
 
-// Define the primary color (Maroon from the logo)
-const Color primaryColor = Color(0xFF800000);
-// Define a secondary color for backgrounds
-const Color secondaryColor = Color(0xFFC8A2C8); 
+// FIX: Using relative paths to access siblings
+import 'models/user_auth_model.dart';
+import 'screens/splash_screen.dart';
+import 'screens/main_navigation_screen.dart';
+
 
 void main() {
-  runApp(const CampusCompassApp());
+  runApp(
+    // Wrap the app with ChangeNotifierProvider to manage state
+    ChangeNotifierProvider(
+      create: (context) => UserAuthModel(),
+      child: const CampusCompassApp(),
+    ),
+  );
 }
 
 class CampusCompassApp extends StatelessWidget {
@@ -19,65 +22,54 @@ class CampusCompassApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const Color primaryMaroon = Color(0xFF800000);
+
     return MaterialApp(
       title: 'Campus Compass',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: primaryColor,
+        primaryColor: primaryMaroon,
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: const MaterialColor(
+            0xFF800000,
+            <int, Color>{
+              50: Color(0xFFF5E5E5),
+              100: Color(0xFFE6B8B8),
+              200: Color(0xFFD38A8A),
+              300: Color(0xFFC05C5C),
+              400: Color(0xFFAA3A3A),
+              500: primaryMaroon,
+              600: Color(0xFF730000),
+              700: Color(0xFF660000),
+              800: Color(0xFF590000),
+              900: Color(0xFF400000),
+            },
+          ),
+        ).copyWith(secondary: primaryMaroon),
         scaffoldBackgroundColor: Colors.white,
+        fontFamily: 'Roboto',
         appBarTheme: const AppBarTheme(
           color: Colors.white,
           elevation: 0,
-          iconTheme: IconThemeData(color: primaryColor),
-        ),
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(color: primaryColor),
-          headlineMedium: TextStyle(color: primaryColor),
-          titleLarge: TextStyle(color: primaryColor),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+          iconTheme: IconThemeData(color: primaryMaroon),
+          titleTextStyle: TextStyle(
+            color: primaryMaroon,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        colorScheme: ColorScheme.fromSwatch(primarySwatch: createMaterialColor(primaryColor))
-            .copyWith(secondary: primaryColor),
-        useMaterial3: true,
       ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const OnboardingScreen(),
-        '/login': (context) => const LoginFormScreen(),
-        '/dashboard': (context) => const DashboardScreen(), 
-        '/scanner': (context) => const QrScannerPage(),
-        '/faculty_finder': (context) => const FacultyFinderScreen(), 
-      },
+      // Check auth state to show the correct entry screen
+      home: Consumer<UserAuthModel>(
+        builder: (context, auth, _) {
+          // If the user is logged in, show the main navigation screen (Home, Footer, etc.)
+          if (auth.isLoggedIn) {
+            return const MainNavigationScreen();
+          }
+          // If not logged in, start with the Splash Screen
+          return const SplashScreen();
+        },
+      ),
     );
   }
-}
-
-// Helper function to create MaterialColor from Color
-MaterialColor createMaterialColor(Color color) {
-  List strengths = <double>[.05];
-  Map<int, Color> swatch = {};
-  final int r = color.red, g = color.green, b = color.blue;
-
-  for (int i = 1; i < 10; i++) {
-    strengths.add(0.1 * i);
-  }
-  for (var strength in strengths) {
-    final double ds = 0.5 - strength;
-    swatch[(strength * 1000).round()] = Color.fromRGBO(
-      r + ((ds < 0 ? r : (255 - r)) * ds).round(),
-      g + ((ds < 0 ? g : (255 - g)) * ds).round(),
-      b + ((ds < 0 ? b : (255 - b)) * ds).round(),
-      1,
-    );
-  }
-  return MaterialColor(color.value, swatch);
 }
