@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../models/user_auth_model.dart';
 import 'faculty_profile_screen.dart';
 
+// (TeacherData model definitions are assumed to be correctly imported from faculty_profile_screen.dart)
+
 class StudentFacultyFinderScreen extends StatefulWidget {
   const StudentFacultyFinderScreen({super.key});
 
@@ -16,7 +18,7 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
   final TextEditingController _searchController = TextEditingController();
   List<TeacherData> _filteredTeachers = [];
 
-  // 1. Defined Faculty Data List
+  // 1. Defined Faculty Data List 
   final List<TeacherData> allTeachers = [
     TeacherData(
       name: 'Prof. Nagini',
@@ -68,14 +70,12 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
   @override
   void initState() {
     super.initState();
-    // Add a listener to trigger filtering and UI rebuild on every text change
     _searchController.addListener(_filterTeachers);
-    _filteredTeachers = List.from(allTeachers); // Initially show all
+    _filteredTeachers = List.from(allTeachers);
   }
 
   void _filterTeachers() {
     final query = _searchController.text.toLowerCase();
-    // setState call here rebuilds the widget tree
     setState(() {
       if (query.isEmpty) {
         _filteredTeachers = List.from(allTeachers);
@@ -97,11 +97,9 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
     super.dispose();
   }
 
-  // Helper widget to display the filtered results
+  // Helper to build the search results list (omitted for brevity)
   Widget _buildSearchResults() {
-    if (_searchController.text.isEmpty) {
-      return Container(); // Hide results when search bar is empty
-    }
+    if (_searchController.text.isEmpty) return Container();
     
     if (_filteredTeachers.isEmpty) {
       return const Center(
@@ -126,7 +124,6 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
               subtitle: Text('${teacher.department} - ${teacher.designation}'),
               trailing: Text(teacher.room, style: TextStyle(color: primaryMaroon, fontWeight: FontWeight.bold)),
               onTap: () {
-                // Navigate to the Faculty Profile Screen
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => FacultyProfileScreen(teacher: teacher),
                 ));
@@ -139,10 +136,60 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
     );
   }
 
+  // NEW: Campus Block Diagram Widget
+  Widget _buildCampusBlockDiagram() {
+    final List<String> blocks = ['A Block', 'B Block', 'C Block', 'D Block', 'E Block'];
+    
+    return Container(
+      padding: const EdgeInsets.all(10),
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: primaryMaroon.withOpacity(0.5)),
+        boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 5)],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          const Text('Campus Layout Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 10),
+          // Horizontal flow of blocks
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: blocks.map((block) => 
+              Container(
+                width: 50,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: primaryMaroon.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: primaryMaroon, width: 1.5),
+                ),
+                alignment: Alignment.center,
+                child: RotatedBox(
+                  quarterTurns: 3, // Rotate text for better fit
+                  child: Text(
+                    block,
+                    style: TextStyle(color: primaryMaroon, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ),
+              )
+            ).toList(),
+          ),
+          const Text(
+            'Tap "View Campus Map" for detailed navigation.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          )
+        ],
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    // Determine if the search bar has text
     final isSearching = _searchController.text.isNotEmpty;
 
     return Scaffold(
@@ -159,7 +206,7 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Search Bar
+            // Search Bar 
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
@@ -186,7 +233,7 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
             ),
             const SizedBox(height: 24),
 
-            // --- Conditionally Display Search Results or Default Widgets ---
+            // Search Results or Default Widgets
             if (isSearching) 
               _buildSearchResults()
             else ...[
@@ -199,7 +246,6 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
               Wrap(
                 spacing: 8.0,
                 children: [
-                  // Added onTap handler to fill the search bar for quick search
                   _buildSearchTag(context, 'Prof. Madhubala', 'madhubala'),
                   _buildSearchTag(context, 'E101', 'e101'),
                   _buildSearchTag(context, 'CSE', 'cse'),
@@ -207,27 +253,9 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
               ),
               const SizedBox(height: 40),
 
-              // 2. Sample Map Placeholder
+              // Campus Blocks Map
               Center(
-                child: Container(
-                  height: 180,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.lightBlue.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blueGrey.shade200),
-                  ),
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.map_outlined, size: 50, color: primaryMaroon),
-                      const SizedBox(height: 8),
-                      const Text('Campus Map Visualization', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500)),
-                      Text('Dynamic 2D/3D Map View Placeholder', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                    ],
-                  ),
-                ),
+                child: _buildCampusBlockDiagram(),
               ),
               const SizedBox(height: 40),
 
@@ -252,7 +280,7 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
               ),
               const SizedBox(height: 30),
 
-              // Quick Help Box (Retained)
+              // Quick Help Box 
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -293,10 +321,10 @@ class _StudentFacultyFinderScreenState extends State<StudentFacultyFinderScreen>
     );
   }
 
+  // Helper to build search tags (omitted for brevity)
   Widget _buildSearchTag(BuildContext context, String text, String query) {
     return GestureDetector(
       onTap: () {
-        // Set the controller text and move the cursor to the end
         _searchController.value = TextEditingValue(
           text: query,
           selection: TextSelection.collapsed(offset: query.length),

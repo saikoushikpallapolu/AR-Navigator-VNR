@@ -6,8 +6,9 @@ import 'home_screen.dart';
 import 'faculty/faculty_wrapper_screen.dart';
 import 'library_screen.dart';
 import 'profile_screen.dart';
-// NEW: Import the QR Scanner screen
-import 'qr_scanner_screen.dart'; 
+import 'qr_scanner_screen.dart';
+// NEW: Import the profile subdirectory for correct navigation in profile_screen.dart
+import 'profile/user_profile_screen.dart';
 
 
 class MainNavigationScreen extends StatelessWidget {
