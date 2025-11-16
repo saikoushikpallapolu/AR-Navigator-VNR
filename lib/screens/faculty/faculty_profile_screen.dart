@@ -1,43 +1,27 @@
 import 'package:flutter/material.dart';
-
-// Data model for the Faculty Profile
-class TeacherData {
-  final String name;
-  final String department;
-  final String designation;
-  final String room;
-  final String phone;
-  final String officeHours;
-  final String status;
-
-  TeacherData({
-    required this.name,
-    required this.department,
-    required this.designation,
-    required this.room,
-    required this.phone,
-    required this.officeHours,
-    required this.status,
-  });
-}
+import '../../models/faculty_model.dart';
 
 class FacultyProfileScreen extends StatelessWidget {
-  final TeacherData teacher;
+  final Faculty faculty;
 
-  const FacultyProfileScreen({super.key, required this.teacher});
+  const FacultyProfileScreen({super.key, required this.faculty});
 
   @override
   Widget build(BuildContext context) {
     const Color primaryMaroon = Color(0xFF800000);
-    const Color primaryLavender = Color(0xFFE6E6FA); // Light purple color for the header
+    const Color primaryLavender = Color(0xFFE6E6FA);
 
+    // Convert Firestore availability to color
     Color statusColor;
-    switch (teacher.status) {
-      case 'Available':
+    switch (faculty.availability.toLowerCase()) {
+      case 'available':
         statusColor = Colors.green;
         break;
-      case 'In Class':
+      case 'in class':
         statusColor = Colors.amber.shade700;
+        break;
+      case 'on leave':
+        statusColor = Colors.red;
         break;
       default:
         statusColor = Colors.grey;
@@ -56,20 +40,25 @@ class FacultyProfileScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // --- Header Section (Lavender Background) ---
+            // -----------------------
+            // HEADER (Lavender Background)
+            // -----------------------
             Container(
               width: double.infinity,
               padding: const EdgeInsets.only(top: 20, bottom: 40),
               color: primaryLavender,
               child: Column(
                 children: [
-                  // Profile Icon
+                  // Icon
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
-                      border: Border.all(color: primaryMaroon.withOpacity(0.5), width: 1),
+                      border: Border.all(
+                        color: primaryMaroon.withOpacity(0.5),
+                        width: 1,
+                      ),
                     ),
                     child: const Icon(
                       Icons.person,
@@ -78,65 +67,70 @@ class FacultyProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  // Name and Department
+
+                  // Name
                   Text(
-                    teacher.name.toUpperCase(),
+                    faculty.name.toUpperCase(),
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
                       color: Colors.black87,
                     ),
                   ),
+
+                  // Department
                   Text(
-                    teacher.department.toUpperCase(),
+                    faculty.dept.toUpperCase(),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                   ),
+
+                  // Designation? You do NOT have this in Firestore
+                  // I will show Faculty ID here instead:
                   Text(
-                    teacher.designation,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                    ),
+                    "FACULTY ID: ${faculty.facultyId}",
+                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                   ),
                 ],
               ),
             ),
 
-            // --- Details Section ---
+            // -----------------------
+            // DETAILS SECTION
+            // -----------------------
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-                  // Room, Phone, Office Hours, Time Table
                   _buildDetailItem(
                     icon: Icons.location_on_outlined,
                     label: 'ROOM NO:',
-                    value: teacher.room,
+                    value: faculty.roomNo,
                   ),
                   _buildDetailItem(
                     icon: Icons.phone_outlined,
                     label: 'CONTACT:',
-                    value: teacher.phone,
+                    value: faculty.number,
                   ),
                   _buildDetailItem(
-                    icon: Icons.schedule_outlined,
-                    label: 'OFFICE HOURS:',
-                    value: teacher.officeHours,
+                    icon: Icons.email_outlined,
+                    label: 'EMAIL:',
+                    value: faculty.email,
                   ),
                   _buildDetailItem(
-                    icon: Icons.image_outlined,
-                    label: 'TIME TABLE:',
-                    value: 'View Time Table',
-                    isAction: true,
+                    icon: Icons.apartment,
+                    label: 'DEPARTMENT:',
+                    value: faculty.dept,
                   ),
 
                   const SizedBox(height: 20),
 
-                  // Current Status
+                  // -----------------------
+                  // STATUS
+                  // -----------------------
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -145,7 +139,7 @@ class FacultyProfileScreen extends StatelessWidget {
                         style: TextStyle(fontSize: 18, color: Colors.black87),
                       ),
                       Text(
-                        teacher.status,
+                        faculty.availability,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -157,23 +151,33 @@ class FacultyProfileScreen extends StatelessWidget {
 
                   const SizedBox(height: 40),
 
-                  // Navigate Button
+                  // -----------------------
+                  // NAVIGATE BUTTON
+                  // -----------------------
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Action: Navigate to Room (Placeholder for future AR/Map integration)
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Navigating to ${teacher.room} via map...')),
+                          SnackBar(
+                            content: Text(
+                              'Navigating to ${faculty.roomNo} via map...',
+                            ),
+                          ),
                         );
                       },
                       icon: const Icon(Icons.near_me_outlined, size: 24),
-                      label: const Text('Navigate To Room', style: TextStyle(fontSize: 18)),
+                      label: const Text(
+                        'Navigate To Room',
+                        style: TextStyle(fontSize: 18),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryMaroon,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 5,
                       ),
                     ),
@@ -187,6 +191,9 @@ class FacultyProfileScreen extends StatelessWidget {
     );
   }
 
+  // -----------------------
+  // DETAIL ITEM BUILDER
+  // -----------------------
   Widget _buildDetailItem({
     required IconData icon,
     required String label,
@@ -198,7 +205,11 @@ class FacultyProfileScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 24, color: isAction ? const Color(0xFF800000) : Colors.grey[700]),
+          Icon(
+            icon,
+            size: 24,
+            color: isAction ? const Color(0xFF800000) : Colors.grey[700],
+          ),
           const SizedBox(width: 15),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

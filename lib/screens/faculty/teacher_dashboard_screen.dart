@@ -1,30 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// FIX: Using relative path to navigate up two levels (../../models)
+
 import '../../models/user_auth_model.dart';
+import '../../models/faculty_model.dart';
+import '../../services/faculty_service.dart';
 
 class TeacherFacultyDashboardScreen extends StatefulWidget {
-  const TeacherFacultyDashboardScreen({super.key});
+  final Faculty faculty; // 🔥 NEW: Accept faculty object
+
+  const TeacherFacultyDashboardScreen({super.key, required this.faculty});
 
   @override
-  State<TeacherFacultyDashboardScreen> createState() => _TeacherFacultyDashboardScreenState();
+  State<TeacherFacultyDashboardScreen> createState() =>
+      _TeacherFacultyDashboardScreenState();
 }
 
-class _TeacherFacultyDashboardScreenState extends State<TeacherFacultyDashboardScreen> {
-  String _currentStatus = 'Available';
+class _TeacherFacultyDashboardScreenState
+    extends State<TeacherFacultyDashboardScreen> {
   final Color primaryMaroon = const Color(0xFF800000);
+  final FacultyService facultyService = FacultyService();
 
-  // Status map to assign color
+  late String _currentStatus;
+
+  // Status colors
   final Map<String, Color> statusColors = {
-    'Available': Colors.green.shade600,
-    'In Class': Colors.amber.shade700,
-    'On Leave': Colors.red.shade600,
+    'Available': Colors.green,
+    'In Class': Colors.amber,
+    'On Leave': Colors.red,
   };
 
-  void _updateStatus(String status) {
+  @override
+  void initState() {
+    super.initState();
+    _currentStatus = widget.faculty.availability; // 🔥 Load status from Firestore
+  }
+
+  // 🔥 FIRESTORE UPDATE FUNCTION
+  Future<void> _updateStatus(String status) async {
     setState(() {
       _currentStatus = status;
     });
+
+    await facultyService.updateAvailability(widget.faculty.id, status);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Status updated to: $status')),
     );
@@ -38,13 +56,13 @@ class _TeacherFacultyDashboardScreenState extends State<TeacherFacultyDashboardS
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Provider.of<UserAuthModel>(context, listen: false).setSelectedIndex(0), // Back to home
+          onPressed: () {
+            Provider.of<UserAuthModel>(context, listen: false)
+                .setSelectedIndex(0);
+          },
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () {},
-          ),
+        actions: const [
+          Icon(Icons.notifications_none),
         ],
       ),
       body: SingleChildScrollView(
@@ -52,27 +70,43 @@ class _TeacherFacultyDashboardScreenState extends State<TeacherFacultyDashboardS
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Current Status Card
+            // ------------------------------------
+            // 🔥 PROFILE CARD USING FIRESTORE DATA
+            // ------------------------------------
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2))],
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  )
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Dr. XXXXXXXX',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  // Faculty Name
+                  Text(
+                    widget.faculty.name,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
+
                   const SizedBox(height: 12),
+
+                  // Status Row
                   Row(
                     children: [
                       const Text(
-                        'Current status : ',
-                        style: TextStyle(fontSize: 16, color: Color(0xFF333333)),
+                        'Current status: ',
+                        style:
+                            TextStyle(fontSize: 16, color: Color(0xFF333333)),
                       ),
                       CircleAvatar(
                         radius: 5,
@@ -89,54 +123,78 @@ class _TeacherFacultyDashboardScreenState extends State<TeacherFacultyDashboardS
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 8),
-                  const Text(
-                    'Room : E012',
-                    style: TextStyle(fontSize: 16, color: Color(0xFF333333)),
-                  ),
-                  const SizedBox(height: 8),
+
+                  // Room Number
                   Text(
-                    'Last updated : 3 min ago',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    'Room : ${widget.faculty.roomNo}',
+                    style: const TextStyle(
+                        fontSize: 16, color: Color(0xFF333333)),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Placeholder for last updated
+                  Text(
+                    'Last updated: Just now',
+                    style:
+                        TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 40),
 
-            // Update Availability Section
+            // ------------------------------------
+            // 🔥 UPDATE AVAILABILITY SECTION
+            // ------------------------------------
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2))],
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  )
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Update Availability',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF333333)),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
                   ),
                   const SizedBox(height: 10),
+
                   _buildStatusOption('Available'),
                   _buildStatusOption('In Class'),
                   _buildStatusOption('On Leave'),
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
-            // Placeholder for other teacher widgets
+
+            // Other dashboard options (unchanged)
             ListTile(
               leading: Icon(Icons.calendar_today, color: primaryMaroon),
-              title: const Text('View Today\'s Schedule'),
+              title: const Text("View Today's Schedule"),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {},
             ),
             ListTile(
               leading: Icon(Icons.book_online, color: primaryMaroon),
-              title: const Text('Manage Appointment Requests'),
+              title: const Text("Manage Appointment Requests"),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {},
             ),
@@ -146,6 +204,9 @@ class _TeacherFacultyDashboardScreenState extends State<TeacherFacultyDashboardS
     );
   }
 
+  // -----------------------------------------
+  // 🔥 RADIO BUTTON OPTION FOR STATUS CHANGE
+  // -----------------------------------------
   Widget _buildStatusOption(String status) {
     Color statusColor = statusColors[status]!;
 
@@ -164,7 +225,7 @@ class _TeacherFacultyDashboardScreenState extends State<TeacherFacultyDashboardS
       groupValue: _currentStatus,
       onChanged: (value) {
         if (value != null) {
-          _updateStatus(value);
+          _updateStatus(value); // 🔥 FIRESTORE UPDATE
         }
       },
       activeColor: primaryMaroon,
