@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 // Simple class to hold the application state (user role and login status)
 class UserAuthModel extends ChangeNotifier {
   String? _userRole; // 'Student' or 'Teacher'
+  String? _userId; // Unique identifier for the user
   bool _isLoggedIn = false;
   int _selectedIndex = 0; // Current index for Bottom Navigation Bar
 
   String? get userRole => _userRole;
+  String? get userId => _userId;
   bool get isLoggedIn => _isLoggedIn;
   int get selectedIndex => _selectedIndex;
 
@@ -26,6 +28,7 @@ class UserAuthModel extends ChangeNotifier {
   void logout() {
     _isLoggedIn = false;
     _userRole = null;
+    _userId = null;
     _selectedIndex = 0;
     notifyListeners();
   }

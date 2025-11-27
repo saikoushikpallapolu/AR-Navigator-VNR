@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// FIX: Using relative path to navigate up to models/ and into the current directory
+
 import '../../models/user_auth_model.dart';
 import 'student_finder_screen.dart';
 import 'teacher_dashboard_screen.dart';
-// NEW: Import the model used for Faculty data
-import 'faculty_profile_screen.dart'; 
 
+import '../../services/faculty_service.dart';
+import '../../models/faculty_model.dart';
 
 class FacultyWrapperScreen extends StatelessWidget {
   const FacultyWrapperScreen({super.key});
@@ -15,16 +15,50 @@ class FacultyWrapperScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = Provider.of<UserAuthModel>(context);
 
+    // -----------------------------
+    // STUDENT SIDE
+    // -----------------------------
     if (auth.userRole == 'Student') {
       return const StudentFacultyFinderScreen();
-    } else if (auth.userRole == 'Teacher') {
-      return const TeacherFacultyDashboardScreen();
-    } else {
-      // Fallback screen in case the role is somehow missing
-      return Scaffold(
-        appBar: AppBar(title: const Text('Faculty')),
-        body: const Center(child: Text('Please log in to view the Faculty dashboard.')),
+    }
+
+    // -----------------------------
+    // TEACHER SIDE (NO AUTH MODE)
+    // Loads first faculty document
+    // -----------------------------
+    if (auth.userRole == 'Teacher') {
+      final facultyService = FacultyService();
+
+      return StreamBuilder<List<Faculty>>(
+        stream: facultyService.getFacultyStream(), // real-time
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          final facultyList = snapshot.data!;
+          if (facultyList.isEmpty) {
+            return const Scaffold(
+              body: Center(child: Text('No faculty found in Firestore')),
+            );
+          }
+
+          // 🔥 TEMP: always load FIRST faculty
+          final faculty = facultyList.first;
+
+          return TeacherFacultyDashboardScreen(faculty: faculty);
+        },
       );
     }
+
+    // -----------------------------
+    // FALLBACK
+    // -----------------------------
+    return Scaffold(
+      appBar: AppBar(title: const Text('Faculty')),
+      body: const Center(child: Text('Select student or teacher')),
+    );
   }
 }
